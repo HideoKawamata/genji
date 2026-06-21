@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+chromadb
+google-cloud-aiplatform
+python-dotenv
+requests
+beautifulsoup4
+pillow
+passlib[bcrypt]
+pyjwt
+email-validator
