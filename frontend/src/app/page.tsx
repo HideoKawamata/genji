@@ -258,7 +258,12 @@ export default function Home() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/consult", {
+      // 【実装の意図（タイムアウト回避）】
+      // Next.jsのローカル開発サーバー(next dev)の内蔵プロキシはタイムアウト設定が短く、
+      // HyDE + Gemini + Imagen の一連の処理（約30秒〜）が完了する前に通信を切断してしまいます。
+      // これを回避するため、フロントエンドからバックエンドAPIへ直接通信(Direct Fetch)を行います。
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const response = await fetch(`${apiUrl}/api/consult`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

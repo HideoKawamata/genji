@@ -92,8 +92,13 @@ def fetch_aozora_text(url):
 
 def chunk_text(text: str, max_chars: int = 300) -> list[str]:
     """
-    Semantic chunking: splits text at sentence boundaries (。！？)
-    instead of fixed character counts.
+    Semantic chunking: 文章の意味的なまとまりを保持するため、
+    固定文字数ではなく文の境界（。！？）でテキストを分割します。
+    
+    【実装の意図（Advanced RAG）】
+    従来の固定文字数での分割（Naive RAG）では、文の途中でチャンクが切れてしまい、
+    LLMが文脈を正しく理解できなくなる問題がありました。
+    この関数では、文脈を維持し検索精度を向上させるためセマンティックチャンキングを採用しています。
     
     Args:
         text: 分割対象の日本語テキスト
@@ -102,7 +107,8 @@ def chunk_text(text: str, max_chars: int = 300) -> list[str]:
         チャンクのリスト
     """
     import re
-    # ステップ1: 文単位分割
+    # ステップ1: 文単位分割 (。！？などの句点で分割)
+    # 肯定後読み(lookbehind)を用いて、句点を残しつつ改行を取り除く
     sentences = re.split(r'(?<=[。！？．])\n?', text)
     sentences = [s.strip() for s in sentences if s.strip()]
     
@@ -113,19 +119,24 @@ def chunk_text(text: str, max_chars: int = 300) -> list[str]:
     
     for sentence in sentences:
         sentence_len = len(sentence)
+        # チャンクが最大文字数を超える場合、現在のチャンクを確定させる
         if current_length + sentence_len > max_chars and current_length > 0:
             chunks.append("".join(current_chunk))
+            
             # ステップ3: オーバーラップの追加 (1文オーバーラップ)
+            # 次のチャンクの先頭に、直前の文を含めることで文脈の繋がり（文脈の断絶）を防ぎます。
             current_chunk = [current_chunk[-1], sentence]
             current_length = len(current_chunk[0]) + sentence_len
         else:
             current_chunk.append(sentence)
             current_length += sentence_len
             
+    # 余った文を最後のチャンクとして追加
     if current_chunk:
         chunks.append("".join(current_chunk))
         
     # ステップ4: 最小チャンク長フィルタ
+    # あまりにも短いチャンク（ノイズ）は検索精度を下げるため除外する
     final_chunks = [c for c in chunks if len(c) >= 30]
     return final_chunks
 

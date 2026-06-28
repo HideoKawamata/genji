@@ -67,14 +67,18 @@ class ConsultResponse(BaseModel):
 
 def generate_hypothetical_document(concern: str, model: GenerativeModel) -> str:
     """
-    HyDE: Generate a hypothetical Genji passage for the given concern.
-    If generation fails, returns the original concern as fallback.
+    HyDE (Hypothetical Document Embeddings)の実装:
+    【実装の意図（Advanced RAG）】
+    現代人の悩み（例：「仕事で失敗した」）のままベクトル検索を行うと、
+    源氏物語のテキストとの意味的な乖離が大きく（語彙の不一致）、適切なシーンがヒットしません。
+    そこで、一度LLM（Gemini）を用いて「この悩みに対応する源氏物語の架空のシーン」を生成し、
+    その「架空のシーン」をクエリとしてベクトル検索を行うことで検索精度を劇的に向上させます。
     
     Args:
         concern: ユーザーの悩みテキスト
         model: 初期化済みのGenerativeModelインスタンス
     Returns:
-        仮説的な源氏物語の場面テキスト（失敗時はconcernをそのまま返す）
+        仮説的な源氏物語の場面テキスト（失敗時はフェールセーフとして元のconcernをそのまま返す）
     """
     try:
         prompt = f"あなたは源氏物語の専門家です。\n以下の現代人の悩みに最も関連する源氏物語の場面を、\n与謝野晶子訳の文体で100文字程度で描写してください。\n悩み: {concern}\n場面描写のみを出力し、説明や前置きは不要です。"
@@ -99,17 +103,25 @@ async def consult(request: ConsultRequest):
         
     model = GenerativeModel("gemini-2.5-flash")
 
-    # 1. Search for similar scenes
+    # 1. Search for similar scenes (Advanced RAG 検索フェーズ)
     try:
+        # Step 1: HyDEによるクエリ拡張（悩みを源氏物語の場面に変換）
         hyde_query = generate_hypothetical_document(concern, model)
         print(f"HyDE query generated: {hyde_query[:50]}...")
+        
+        # Step 2: ベクトル検索（多めに候補を取得する。n_results=5）
+        # 最初から少なく取得すると、検索漏れ（Recallの低下）が発生するため。
         results = collection.query(
             query_texts=[hyde_query],
             n_results=5
         )
         context_chunks = results['documents'][0]
         
-        # Re-ranking: Cross-Encoderで関連度を再評価
+        # Step 3: Re-ranking (Cross-Encoderによる再評価と絞り込み)
+        # 【実装の意図】
+        # Bi-Encoder（通常のベクトル検索）は高速ですが比較精度が劣ります。
+        # Cross-Encoderはクエリと文書のペアを同時に入力して精緻にスコアリングします。
+        # 上位5件から最も文脈が合う上位3件を厳選してLLMに渡すことでハルシネーションを防ぎます。
         if reranker and len(context_chunks) > 1:
             try:
                 pairs = [[concern, chunk] for chunk in context_chunks]
