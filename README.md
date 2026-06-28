@@ -255,6 +255,8 @@ To deploy the frontend on Vercel:
 - **Re-ranking / Cross-Encoders:** Reimers, N., & Gurevych, I. (2019). *Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks*. Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing. [Link](https://arxiv.org/abs/1908.10084)
 - **Retrieval-Augmented Generation for Large Language Models: A Survey (Metadata Filtering & Parent-Child Chunking):** Gao, Y., Xiong, Y., Gao, X., Jia, K., Pan, J., Bi, Y., ... & Wang, H. (2023). *Retrieval-Augmented Generation for Large Language Models: A Survey*. arXiv preprint arXiv:2312.10997. [Link](https://arxiv.org/abs/2312.10997)
 - **Corrective Retrieval Augmented Generation (CRAG):** Yan, S.-Q., Gu, J.-C., Zhu, Y., & Ling, Z.-H. (2024). *Corrective Retrieval Augmented Generation*. arXiv preprint arXiv:2401.15884. [Link](https://arxiv.org/abs/2401.15884)
+- **Multi-turn RAG Query Rewriting:** NVIDIA. (2024). *Query Rewriting for Multi-turn RAG*.
+- **Parent-Child Chunking:** LlamaIndex. (2023). *Parent Document Retriever*.
 - **The Tale of Genji (Modern Translation):** Yosano, Akiko. *The Tale of Genji* (Modern Japanese Translation). Aozora Bunko.
 
 ## License
