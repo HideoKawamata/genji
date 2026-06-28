@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 from vertexai.language_models import TextEmbeddingModel
+from sentence_transformers import CrossEncoder
 
 # Use the same EmbeddingFunction class defined in data_loader
 from data_loader import GCPVertexEmbeddingFunction
@@ -45,6 +46,14 @@ except Exception as e:
     print(f"Warning: Could not load collection. Please run data_loader.py first. {e}")
     collection = None
 
+# Initialize Re-ranker
+try:
+    reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+    print("Re-ranker loaded successfully.")
+except Exception as e:
+    print(f"Warning: Re-ranker could not be loaded: {e}")
+    reranker = None
+
 class ConsultRequest(BaseModel):
     concern: str
 
@@ -56,6 +65,25 @@ class ConsultResponse(BaseModel):
     waka_translation: str
     image_url: str
 
+def generate_hypothetical_document(concern: str, model: GenerativeModel) -> str:
+    """
+    HyDE: Generate a hypothetical Genji passage for the given concern.
+    If generation fails, returns the original concern as fallback.
+    
+    Args:
+        concern: ユーザーの悩みテキスト
+        model: 初期化済みのGenerativeModelインスタンス
+    Returns:
+        仮説的な源氏物語の場面テキスト（失敗時はconcernをそのまま返す）
+    """
+    try:
+        prompt = f"あなたは源氏物語の専門家です。\n以下の現代人の悩みに最も関連する源氏物語の場面を、\n与謝野晶子訳の文体で100文字程度で描写してください。\n悩み: {concern}\n場面描写のみを出力し、説明や前置きは不要です。"
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        print(f"HyDE generation failed: {e}")
+        return concern
+
 @app.post("/api/consult", response_model=ConsultResponse)
 async def consult(request: ConsultRequest):
     if not collection:
@@ -63,13 +91,39 @@ async def consult(request: ConsultRequest):
 
     concern = request.concern
 
+    import os
+    project = os.getenv("GOOGLE_CLOUD_PROJECT")
+    location = os.getenv("GCP_REGION", "asia-northeast1")
+    if project:
+        vertexai.init(project=project, location=location)
+        
+    model = GenerativeModel("gemini-2.5-flash")
+
     # 1. Search for similar scenes
     try:
+        hyde_query = generate_hypothetical_document(concern, model)
+        print(f"HyDE query generated: {hyde_query[:50]}...")
         results = collection.query(
-            query_texts=[concern],
-            n_results=3
+            query_texts=[hyde_query],
+            n_results=5
         )
         context_chunks = results['documents'][0]
+        
+        # Re-ranking: Cross-Encoderで関連度を再評価
+        if reranker and len(context_chunks) > 1:
+            try:
+                pairs = [[concern, chunk] for chunk in context_chunks]
+                scores = reranker.predict(pairs)
+                # スコア降順でソートし、上位3件を使用
+                ranked = sorted(zip(scores, context_chunks), key=lambda x: x[0], reverse=True)
+                context_chunks = [chunk for _, chunk in ranked[:3]]
+                print(f"Re-ranking applied: {len(results['documents'][0])} → 3 chunks selected")
+            except Exception as e:
+                print(f"Re-ranking failed, using original order: {e}")
+                context_chunks = context_chunks[:3]
+        else:
+            context_chunks = context_chunks[:3]
+            
         context_text = "\n\n".join(context_chunks)
     except Exception as e:
         print(f"Search failed: {e}")
@@ -77,14 +131,6 @@ async def consult(request: ConsultRequest):
 
     # 2. Generate empathetic text and Waka using Gemini 2.5 Flash
     try:
-        import os
-        project = os.getenv("GOOGLE_CLOUD_PROJECT")
-        location = os.getenv("GCP_REGION", "asia-northeast1")
-        if project:
-            vertexai.init(project=project, location=location)
-            
-        model = GenerativeModel("gemini-2.5-flash")
-        
         prompt = f"""
 You are "Genji-Mirror", a mirror that deeply empathizes with the characters of "The Tale of Genji" from 1000 years ago, and delivers their words to modern people.
 Based on the following [Concern] from a modern person and the [Related Episode] from The Tale of Genji, deeply empathize and encourage them from the perspective of a specific character.

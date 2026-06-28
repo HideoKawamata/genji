@@ -9,12 +9,61 @@ from vertexai.language_models import TextEmbeddingModel
 # Load environment variables
 load_dotenv()
 
-# URL list of modern translations of The Tale of Genji (Yosano Akiko translation, Aozora Bunko)
 URLS = [
     {"title": "桐壺", "url": "https://www.aozora.gr.jp/cards/000052/files/5016_9758.html"},
     {"title": "帚木", "url": "https://www.aozora.gr.jp/cards/000052/files/5017_9759.html"},
     {"title": "空蝉", "url": "https://www.aozora.gr.jp/cards/000052/files/5018_9760.html"},
-    {"title": "夕顔", "url": "https://www.aozora.gr.jp/cards/000052/files/5019_9761.html"},
+    {"title": "夕顔", "url": "https://www.aozora.gr.jp/cards/000052/files/5019_9762.html"},
+    {"title": "若紫", "url": "https://www.aozora.gr.jp/cards/000052/files/5020_11254.html"},
+    {"title": "末摘花", "url": "https://www.aozora.gr.jp/cards/000052/files/5021_11107.html"},
+    {"title": "紅葉賀", "url": "https://www.aozora.gr.jp/cards/000052/files/5022_11633.html"},
+    {"title": "花宴", "url": "https://www.aozora.gr.jp/cards/000052/files/5023_10175.html"},
+    {"title": "葵", "url": "https://www.aozora.gr.jp/cards/000052/files/5024_11085.html"},
+    {"title": "賢木", "url": "https://www.aozora.gr.jp/cards/000052/files/5025_11636.html"},
+    {"title": "花散里", "url": "https://www.aozora.gr.jp/cards/000052/files/5026_11638.html"},
+    {"title": "須磨", "url": "https://www.aozora.gr.jp/cards/000052/files/5027_11270.html"},
+    {"title": "明石", "url": "https://www.aozora.gr.jp/cards/000052/files/5028_11650.html"},
+    {"title": "澪標", "url": "https://www.aozora.gr.jp/cards/000052/files/5029_10177.html"},
+    {"title": "蓬生", "url": "https://www.aozora.gr.jp/cards/000052/files/5030_10219.html"},
+    {"title": "関屋", "url": "https://www.aozora.gr.jp/cards/000052/files/5031_10221.html"},
+    {"title": "絵合", "url": "https://www.aozora.gr.jp/cards/000052/files/5032_10223.html"},
+    {"title": "松風", "url": "https://www.aozora.gr.jp/cards/000052/files/5033_11020.html"},
+    {"title": "薄雲", "url": "https://www.aozora.gr.jp/cards/000052/files/5034_11648.html"},
+    {"title": "朝顔", "url": "https://www.aozora.gr.jp/cards/000052/files/5035_11652.html"},
+    {"title": "少女", "url": "https://www.aozora.gr.jp/cards/000052/files/5036_11906.html"},
+    {"title": "玉鬘", "url": "https://www.aozora.gr.jp/cards/000052/files/5037_11910.html"},
+    {"title": "初音", "url": "https://www.aozora.gr.jp/cards/000052/files/5038_10199.html"},
+    {"title": "胡蝶", "url": "https://www.aozora.gr.jp/cards/000052/files/5039_11657.html"},
+    {"title": "蛍", "url": "https://www.aozora.gr.jp/cards/000052/files/5040_11669.html"},
+    {"title": "常夏", "url": "https://www.aozora.gr.jp/cards/000052/files/5041_12171.html"},
+    {"title": "篝火", "url": "https://www.aozora.gr.jp/cards/000052/files/5042_11844.html"},
+    {"title": "野分", "url": "https://www.aozora.gr.jp/cards/000052/files/5043_10262.html"},
+    {"title": "行幸", "url": "https://www.aozora.gr.jp/cards/000052/files/5044_10287.html"},
+    {"title": "藤袴", "url": "https://www.aozora.gr.jp/cards/000052/files/5045_11024.html"},
+    {"title": "真木柱", "url": "https://www.aozora.gr.jp/cards/000052/files/5046_12198.html"},
+    {"title": "梅枝", "url": "https://www.aozora.gr.jp/cards/000052/files/5047_12202.html"},
+    {"title": "藤裏葉", "url": "https://www.aozora.gr.jp/cards/000052/files/5048_12252.html"},
+    {"title": "若菜上", "url": "https://www.aozora.gr.jp/cards/000052/files/5049_14830.html"},
+    {"title": "若菜下", "url": "https://www.aozora.gr.jp/cards/000052/files/5050_14552.html"},
+    {"title": "柏木", "url": "https://www.aozora.gr.jp/cards/000052/files/5051_14567.html"},
+    {"title": "横笛", "url": "https://www.aozora.gr.jp/cards/000052/files/5052_13280.html"},
+    {"title": "鈴虫", "url": "https://www.aozora.gr.jp/cards/000052/files/5053_12173.html"},
+    {"title": "夕霧", "url": "https://www.aozora.gr.jp/cards/000052/files/5054_10249.html"},
+    {"title": "御法", "url": "https://www.aozora.gr.jp/cards/000052/files/5055_10251.html"},
+    {"title": "幻", "url": "https://www.aozora.gr.jp/cards/000052/files/5056_13291.html"},
+    {"title": "匂宮", "url": "https://www.aozora.gr.jp/cards/000052/files/5057_14554.html"},
+    {"title": "紅梅", "url": "https://www.aozora.gr.jp/cards/000052/files/5058_14558.html"},
+    {"title": "竹河", "url": "https://www.aozora.gr.jp/cards/000052/files/5059_11969.html"},
+    {"title": "橋姫", "url": "https://www.aozora.gr.jp/cards/000052/files/5060_15278.html"},
+    {"title": "椎本", "url": "https://www.aozora.gr.jp/cards/000052/files/5061_15280.html"},
+    {"title": "総角", "url": "https://www.aozora.gr.jp/cards/000052/files/5062_15326.html"},
+    {"title": "早蕨", "url": "https://www.aozora.gr.jp/cards/000052/files/5063_15328.html"},
+    {"title": "宿木", "url": "https://www.aozora.gr.jp/cards/000052/files/5064_15564.html"},
+    {"title": "東屋", "url": "https://www.aozora.gr.jp/cards/000052/files/5065_15348.html"},
+    {"title": "浮舟", "url": "https://www.aozora.gr.jp/cards/000052/files/5066_16261.html"},
+    {"title": "蜻蛉", "url": "https://www.aozora.gr.jp/cards/000052/files/5067_16265.html"},
+    {"title": "手習", "url": "https://www.aozora.gr.jp/cards/000052/files/5068_17944.html"},
+    {"title": "夢浮橋", "url": "https://www.aozora.gr.jp/cards/000052/files/5069_16428.html"}
 ]
 
 def fetch_aozora_text(url):
@@ -41,16 +90,44 @@ def fetch_aozora_text(url):
     text = re.sub(r'\u3000', ' ', text)
     return text
 
-def chunk_text(text, chunk_size=300, overlap=50):
-    """Chunk text by a certain number of characters"""
+def chunk_text(text: str, max_chars: int = 300) -> list[str]:
+    """
+    Semantic chunking: splits text at sentence boundaries (。！？)
+    instead of fixed character counts.
+    
+    Args:
+        text: 分割対象の日本語テキスト
+        max_chars: 1チャンクあたりの最大文字数（目安）
+    Returns:
+        チャンクのリスト
+    """
+    import re
+    # ステップ1: 文単位分割
+    sentences = re.split(r'(?<=[。！？．])\n?', text)
+    sentences = [s.strip() for s in sentences if s.strip()]
+    
+    # ステップ2: 文をグルーピングしてチャンク生成
     chunks = []
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunk = text[start:end]
-        chunks.append(chunk)
-        start += chunk_size - overlap
-    return chunks
+    current_chunk = []
+    current_length = 0
+    
+    for sentence in sentences:
+        sentence_len = len(sentence)
+        if current_length + sentence_len > max_chars and current_length > 0:
+            chunks.append("".join(current_chunk))
+            # ステップ3: オーバーラップの追加 (1文オーバーラップ)
+            current_chunk = [current_chunk[-1], sentence]
+            current_length = len(current_chunk[0]) + sentence_len
+        else:
+            current_chunk.append(sentence)
+            current_length += sentence_len
+            
+    if current_chunk:
+        chunks.append("".join(current_chunk))
+        
+    # ステップ4: 最小チャンク長フィルタ
+    final_chunks = [c for c in chunks if len(c) >= 30]
+    return final_chunks
 
 class GCPVertexEmbeddingFunction(chromadb.EmbeddingFunction):
     """Vertex AI Embedding function for ChromaDB"""
@@ -125,7 +202,7 @@ def main():
             continue
             
         chunks = chunk_text(text)
-        print(f"{title}: Created {len(chunks)} chunks.")
+        print(f"{title}: {len(chunks)} chunks created (semantic, avg {sum(len(c) for c in chunks)//max(len(chunks),1)} chars/chunk)")
         
         for i, chunk in enumerate(chunks):
             chunk_id_counter += 1
