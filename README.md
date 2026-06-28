@@ -118,10 +118,20 @@ sequenceDiagram
 4. **Empathetic Agentic Persona (`gemini-2.5-flash`)**:
    * Evaluates the modern concern against the retrieved context to assume the role-play of Heian characters.
    * Generates deep-empathy messages, explaining the historical context of their empathy, writing fitting Waka poems with translations, and outputting JSON data without Markdown wrappers for direct parser integration.
-3. **Illustrative Scroll Generation (`imagen-3.0-generate-002`)**:
+   * **Multi-turn Context**: Maintains up to 10 turns of conversation history per session to provide context-aware, continuous empathy.
+   * **Asynchronous Execution**: Leverages `asyncio` for non-blocking API calls, ensuring high concurrency and responsive generation.
+
+5. **Advanced RAG Enhancements**:
+   * **Metadata Filtering (Gao et al. 2023)**: Uses document metadata (like chapter information) to constrain and guide the vector search space effectively.
+   * **Corrective RAG (CRAG) (Yan et al. 2024)**: Automatically evaluates the quality of retrieved documents. If the similarity score is too low, the system dynamically drops constraints and performs a fallback search to guarantee relevant context.
+   * **Parent-Child Chunking (LlamaIndex / Gao et al. 2023)**: Retrieval is performed on smaller child chunks (200 chars) for precision, but the LLM is fed the larger parent chunk (500 chars) to provide richer, more comprehensive context for generation.
+
+6. **Illustrative Scroll Generation (`imagen-3.0-generate-002`)**:
    * Generates Heian scroll-painting style images (16:9 aspect-ratio) based on Gemini's English image prompts.
+   * Executed asynchronously to avoid blocking the main event loop.
    * **Robust Fallback:** If GCP service quotas or regional limits prevent image generation, the system falls back to a high-quality pre-configured placeholder image.
-4. **JWT Authentication & Local DB (SQLite)**:
+
+7. **JWT Authentication & Local DB (SQLite)**:
    * Leverages a local SQLite database (`users.db`) for user registrations and logins.
    * Passwords are encrypted using standard PBKDF2-HMAC-SHA256 with 100,000 iterations and random salt.
    * Endpoints authenticate sessions with JWT (JSON Web Tokens) sent in Authorization headers.
@@ -243,6 +253,8 @@ To deploy the frontend on Vercel:
 
 - **HyDE (Hypothetical Document Embeddings):** Gao, L., Ma, X., Lin, J., & Callan, J. (2022). *Precise Zero-Shot Dense Retrieval without Relevance Labels*. arXiv preprint arXiv:2212.10496. [Link](https://arxiv.org/abs/2212.10496)
 - **Re-ranking / Cross-Encoders:** Reimers, N., & Gurevych, I. (2019). *Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks*. Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing. [Link](https://arxiv.org/abs/1908.10084)
+- **Retrieval-Augmented Generation for Large Language Models: A Survey (Metadata Filtering & Parent-Child Chunking):** Gao, Y., Xiong, Y., Gao, X., Jia, K., Pan, J., Bi, Y., ... & Wang, H. (2023). *Retrieval-Augmented Generation for Large Language Models: A Survey*. arXiv preprint arXiv:2312.10997. [Link](https://arxiv.org/abs/2312.10997)
+- **Corrective Retrieval Augmented Generation (CRAG):** Yan, S.-Q., Gu, J.-C., Zhu, Y., & Ling, Z.-H. (2024). *Corrective Retrieval Augmented Generation*. arXiv preprint arXiv:2401.15884. [Link](https://arxiv.org/abs/2401.15884)
 - **The Tale of Genji (Modern Translation):** Yosano, Akiko. *The Tale of Genji* (Modern Japanese Translation). Aozora Bunko.
 
 ## License
